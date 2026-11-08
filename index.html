@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>XiSOUL RC - Yönetici Paneli</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#0c0d10">
+    <link rel="icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="RC Panel">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #0c0d10; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        /* ÜST HEADER */
+        .header { display: flex; justify-content: space-between; align-items: center; background: #15161c; padding: 18px 24px; border-radius: 12px; border: 1px solid #252733; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+        .brand-box { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .brand-title { font-size: 22px; font-weight: 900; letter-spacing: 1px; color: #fff; }
+        .badge { font-size: 11px; font-weight: 800; padding: 5px 12px; border-radius: 6px; text-transform: uppercase; }
+        .badge-green { background: #00c853; color: #000; font-weight: 900; }
+        .badge-blue { background: #2979ff; color: #fff; }
+        .header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        .btn-refresh { background: #2979ff; border: none; color: #fff; font-weight: 700; padding: 8px 18px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .btn-refresh:hover { background: #1565c0; }
+        .btn-refresh:disabled { opacity: 0.5; cursor: wait; }
+        .btn-install { background: #00c853; color: #000; }
+        .btn-install:hover { background: #00a846; }
+
+        /* DURUM BİLDİRİMİ */
+        #notice { display: none; padding: 12px 18px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; font-weight: 700; }
+        #notice.ok { display: block; background: rgba(0, 200, 83, 0.15); color: #00e676; border: 1px solid #00c853; }
+        #notice.err { display: block; background: rgba(255, 61, 0, 0.15); color: #ff8a65; border: 1px solid #ff3d00; }
+
+        /* MAKİNE SEÇİCİ */
+        .machine-selector { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .mac-btn { background: #1c1d24; border: 1px solid #2e303d; color: #bbb; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 800; cursor: pointer; transition: 0.2s; }
+        .mac-btn.active, .mac-btn:hover { background: #ffb300; color: #000; border-color: #ffb300; }
+
+        /* KPI KARTLARI */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .kpi-card { background: #16171d; border: 1px solid #262734; border-radius: 12px; padding: 20px; position: relative; overflow: hidden; }
+        .kpi-card::before { content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: #ffb300; }
+        .kpi-card.green::before { background: #00e676; }
+        .kpi-card.blue::before { background: #2979ff; }
+        .kpi-card.purple::before { background: #d500f9; }
+
+        .kpi-title { font-size: 12px; color: #888; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; }
+        .kpi-amount { font-size: 32px; font-weight: 900; color: #fff; margin-bottom: 12px; font-variant-numeric: tabular-nums; }
+        .kpi-split { display: flex; justify-content: space-between; background: rgba(0,0,0,0.4); padding: 8px 12px; border-radius: 6px; font-size: 13px; color: #bbb; margin-bottom: 8px; }
+        .kpi-split b { color: #fff; }
+        .kpi-count { font-size: 13px; color: #ffb300; font-weight: 700; }
+
+        /* GRAFİK BÖLÜMÜ */
+        .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 24px; }
+        @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
+        .chart-card { background: #16171d; border: 1px solid #262734; border-radius: 12px; padding: 20px; min-width: 0; }
+        .chart-title { font-size: 14px; font-weight: 800; color: #ccc; margin-bottom: 15px; }
+        .canvas-wrap { width: 100%; height: 180px; position: relative; }
+
+        /* TABLO */
+        .table-card { background: #16171d; border: 1px solid #262734; border-radius: 12px; padding: 20px; }
+        .table-head-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 12px; }
+        .period-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+        .p-btn { background: #22232c; border: 1px solid #31333f; color: #aaa; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; }
+        .p-btn.active, .p-btn:hover { background: #ffb300; color: #000; border-color: #ffb300; }
+        .search-input { background: #0c0d10; border: 1px solid #333; color: #fff; padding: 8px 14px; border-radius: 6px; font-size: 13px; outline: none; width: 220px; }
+
+        .table-scroll { max-height: 400px; overflow: auto; border: 1px solid #262734; border-radius: 8px; }
+        table { width: 100%; min-width: 1050px; border-collapse: collapse; font-size: 13px; text-align: left; }
+        th { background: #20222a; color: #888; font-weight: 800; padding: 12px 14px; position: sticky; top: 0; border-bottom: 1px solid #333; }
+        td { padding: 12px 14px; border-bottom: 1px solid #1e2028; color: #ddd; }
+        tr:hover { background: #1d1e26; }
+        .cell-empty { text-align: center; padding: 30px; color: #666; }
+        .cell-machine { color: #2979ff; font-weight: 800; }
+        .cell-id { font-family: monospace; color: #ffb300; font-weight: 700; }
+        .cell-total { font-weight: 900; color: #fff; }
+        .cell-comp { color: #00e676; font-weight: 700; }
+        .cell-own { color: #2979ff; font-weight: 700; }
+
+        .badge-status { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; background: rgba(0, 200, 83, 0.2); color: #00e676; }
+        .badge-test { background: rgba(255, 59, 59, 0.2); color: #ff5252; }
+
+        .action-btn { padding: 5px 12px; border-radius: 5px; font-size: 11px; font-weight: 800; border: none; cursor: pointer; transition: 0.2s; margin-right: 5px; }
+        .btn-test { background: #ff9100; color: #000; }
+        .btn-delete { background: #ff3d00; color: #fff; }
+        .action-btn:hover { opacity: 0.8; }
+        .action-btn:disabled { opacity: 0.4; cursor: wait; }
+
+        /* GİRİŞ EKRANI */
+        #pinOverlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0c0d10; z-index: 9999; display: flex; justify-content: center; align-items: center; padding: 16px; }
+        .lock-box { background: #15161c; border: 1px solid #2a2c38; padding: 35px; border-radius: 16px; text-align: center; width: 340px; max-width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
+        .lock-title { font-size: 20px; font-weight: 900; color: #ffb300; margin-bottom: 8px; }
+        .lock-sub { font-size: 13px; color: #888; }
+        .lock-input { width: 180px; height: 46px; background: #000; border: 2px solid #444; border-radius: 8px; color: #fff; font-size: 24px; text-align: center; letter-spacing: 6px; margin: 15px auto; display: block; outline: none; }
+        .api-input { width: 100%; background: #000; border: 2px solid #444; border-radius: 8px; color: #fff; font-size: 13px; padding: 10px; margin-top: 15px; outline: none; }
+        .lock-btn { width: 100%; background: #00c853; border: none; color: #000; font-weight: 900; padding: 12px; border-radius: 8px; cursor: pointer; font-size: 15px; }
+        .lock-btn:disabled { opacity: 0.5; cursor: wait; }
+        .lock-error { color: #ff3d00; font-size: 13px; min-height: 20px; margin-bottom: 10px; }
+        .link-btn { background: none; border: none; color: #666; font-size: 12px; margin-top: 14px; cursor: pointer; text-decoration: underline; }
+        .hidden { display: none !important; }
+
+        @media (max-width: 600px) {
+            body { padding: 12px; }
+            .search-input { width: 100%; }
+            .kpi-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- GİRİŞ EKRANI -->
+    <div id="pinOverlay">
+        <div class="lock-box">
+            <div class="lock-title">🔐 YÖNETİCİ GİRİŞİ</div>
+            <div class="lock-sub">Gamextra &amp; XiSOUL Bulut Paneli</div>
+            <input type="url" id="apiInput" class="api-input hidden" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off" />
+            <input type="password" id="adminPinInput" class="lock-input" inputmode="numeric" maxlength="12" placeholder="PIN" autocomplete="off" />
+            <div id="lockError" class="lock-error"></div>
+            <button id="loginBtn" class="lock-btn">GİRİŞ YAP</button>
+            <button id="changeApiBtn" class="link-btn hidden">Sunucu adresini değiştir</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="brand-box">
+                <div class="brand-title">GAMEXTRA RC ARENA</div>
+                <span class="badge badge-green">CİRO PAYLAŞIMI: %50 / %50</span>
+                <span class="badge badge-blue">BULUT SENKRONİZASYONU</span>
+            </div>
+            <div class="header-actions">
+                <button id="installBtn" class="btn-refresh btn-install hidden">📲 Uygulamayı Yükle</button>
+                <button id="refreshBtn" class="btn-refresh">🔄 Canlı Veriyi Yenile</button>
+            </div>
+        </div>
+
+        <div id="notice" role="status"></div>
+
+        <!-- MAKİNE SEÇİCİ -->
+        <div class="machine-selector" id="machineSelector"></div>
+
+        <!-- KPI KARTLARI -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-title">BUGÜNKÜ CİRO</div>
+                <div class="kpi-amount" id="kpiTodayTotal">0 ₺</div>
+                <div class="kpi-split"><span>Gamextra: <b id="kpiTodayComp">0 ₺</b></span><span>XiSOUL: <b id="kpiTodayOwn">0 ₺</b></span></div>
+                <div class="kpi-count" id="kpiTodayCount">0 Seans</div>
+            </div>
+            <div class="kpi-card green">
+                <div class="kpi-title">BU HAFTAKİ CİRO</div>
+                <div class="kpi-amount" id="kpiWeekTotal">0 ₺</div>
+                <div class="kpi-split"><span>Gamextra: <b id="kpiWeekComp">0 ₺</b></span><span>XiSOUL: <b id="kpiWeekOwn">0 ₺</b></span></div>
+                <div class="kpi-count" id="kpiWeekCount">0 Seans</div>
+            </div>
+            <div class="kpi-card blue">
+                <div class="kpi-title">BU AYKİ CİRO</div>
+                <div class="kpi-amount" id="kpiMonthTotal">0 ₺</div>
+                <div class="kpi-split"><span>Gamextra: <b id="kpiMonthComp">0 ₺</b></span><span>XiSOUL: <b id="kpiMonthOwn">0 ₺</b></span></div>
+                <div class="kpi-count" id="kpiMonthCount">0 Seans</div>
+            </div>
+            <div class="kpi-card purple">
+                <div class="kpi-title">TÜM ZAMANLAR</div>
+                <div class="kpi-amount" id="kpiAllTotal">0 ₺</div>
+                <div class="kpi-split"><span>Gamextra: <b id="kpiAllComp">0 ₺</b></span><span>XiSOUL: <b id="kpiAllOwn">0 ₺</b></span></div>
+                <div class="kpi-count" id="kpiAllCount">0 Seans</div>
+            </div>
+        </div>
+
+        <!-- GRAFİKLER -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-title">📊 SON 7 GÜNLÜK CİRO TRENDİ (TL)</div>
+                <div class="canvas-wrap"><canvas id="dailyChartCanvas"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">⏰ GÜN İÇİ SAATLİK YOĞUNLUK ANALİZİ</div>
+                <div class="canvas-wrap"><canvas id="hourlyChartCanvas"></canvas></div>
+            </div>
+        </div>
+
+        <!-- TABLO -->
+        <div class="table-card">
+            <div class="table-head-bar">
+                <div class="period-tabs" id="periodTabs">
+                    <button class="p-btn active" data-period="all">Tümü</button>
+                    <button class="p-btn" data-period="today">Bugün</button>
+                    <button class="p-btn" data-period="week">Bu Hafta</button>
+                    <button class="p-btn" data-period="month">Bu Ay</button>
+                </div>
+                <input type="text" id="searchInput" class="search-input" placeholder="🔍 Seans ID ara..." />
+            </div>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>MAKİNE</th>
+                            <th>SEANS ID</th>
+                            <th>BAŞLANGIÇ</th>
+                            <th>BİTİŞ</th>
+                            <th>SÜRE</th>
+                            <th>TOPLAM</th>
+                            <th>GAMEXTRA (%50)</th>
+                            <th>XiSOUL (%50)</th>
+                            <th>DURUM</th>
+                            <th>YÖNETİCİ MÜDAHALESİ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sessionBody">
+                        <tr><td colspan="10" class="cell-empty">Veriler yükleniyor...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var API_KEY = "rc_panel_api_url";
+        var FIXED_MACHINES = ["SIM-01", "SIM-02", "SIM-03", "SIM-04"];
+
+        var API_URL = "";
+        var PIN = "";
+        var ALL_SESSIONS = [];
+        var CURRENT_MACHINE = "ALL";
+        var CURRENT_PERIOD = "all";
+
+        function $(id) { return document.getElementById(id); }
+
+        function esc(v) {
+            return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) {
+                return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+            });
+        }
+
+        function money(v) { return (Number(v) || 0).toLocaleString("tr-TR") + " ₺"; }
+
+        // PIN yalnızca Google Apps Script adresine gönderilebilsin.
+        function isValidApiUrl(u) {
+            return /^https:\/\/script\.google\.com\/[^\s]+\/exec$/.test(u);
+        }
+
+        // --- SUNUCU İLETİŞİMİ ---
+        async function api(action, extra) {
+            var body = Object.assign({ action: action, pin: PIN }, extra || {});
+            var res;
+            try {
+                // text/plain, Apps Script'in desteklemediği CORS ön isteğini önler.
+                res = await fetch(API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify(body),
+                    redirect: "follow"
+                });
+            } catch (e) {
+                throw new Error("Sunucuya ulaşılamadı. İnternet bağlantısını kontrol edin.");
+            }
+            if (!res.ok) throw new Error("Sunucu hatası: HTTP " + res.status);
+
+            var json;
+            try { json = await res.json(); }
+            catch (e) { throw new Error("Sunucu geçersiz yanıt verdi. Sunucu adresini kontrol edin."); }
+
+            if (json.status === "UNKNOWN_ACTION") {
+                throw new Error("Sunucudaki script eski sürüm. Apps Script'te yeni sürüm yayınlayın.");
+            }
+            if (json.status !== "SUCCESS") {
+                var err = new Error(json.message || ("İşlem başarısız: " + json.status));
+                err.status = json.status;
+                throw err;
+            }
+            return json;
+        }
+
+        function showNotice(text, isError) {
+            var n = $("notice");
+            n.textContent = text;
+            n.className = isError ? "err" : "ok";
+            clearTimeout(showNotice.timer);
+            if (!isError) showNotice.timer = setTimeout(function () { n.className = ""; }, 4000);
+        }
+
+        // --- GİRİŞ ---
+        function initApiUrl() {
+            var match = location.hash.match(/^#api=(.+)$/);
+            if (match) {
+                var fromLink = decodeURIComponent(match[1]);
+                if (isValidApiUrl(fromLink)) localStorage.setItem(API_KEY, fromLink);
+                history.replaceState(null, "", location.pathname + location.search);
+            }
+            API_URL = localStorage.getItem(API_KEY) || "";
+            $("apiInput").classList.toggle("hidden", !!API_URL);
+            $("changeApiBtn").classList.toggle("hidden", !API_URL);
+        }
+
+        async function login() {
+            var errBox = $("lockError");
+            errBox.textContent = "";
+
+            if (!API_URL) {
+                var entered = $("apiInput").value.trim();
+                if (!isValidApiUrl(entered)) {
+                    errBox.textContent = "Geçerli bir script.google.com .../exec adresi girin.";
+                    return;
+                }
+                API_URL = entered;
+            }
+
+            PIN = $("adminPinInput").value;
+            if (!PIN) { errBox.textContent = "PIN girin."; return; }
+
+            $("loginBtn").disabled = true;
+            try {
+                var data = await api("GET_DATA");
+                localStorage.setItem(API_KEY, API_URL);
+                ALL_SESSIONS = data.sessions || [];
+                $("pinOverlay").classList.add("hidden");
+                $("apiInput").classList.add("hidden");
+                renderMachines();
+                processAndRender();
+            } catch (e) {
+                PIN = "";
+                $("adminPinInput").value = "";
+                errBox.textContent = e.message;
+                if (!localStorage.getItem(API_KEY)) API_URL = "";
+            } finally {
+                $("loginBtn").disabled = false;
+            }
+        }
+
+        function changeApi() {
+            localStorage.removeItem(API_KEY);
+            API_URL = "";
+            $("apiInput").value = "";
+            $("apiInput").classList.remove("hidden");
+            $("changeApiBtn").classList.add("hidden");
+            $("apiInput").focus();
+        }
+
+        function lockAgainIfUnauthorized(e) {
+            if (e.status === "UNAUTHORIZED" || e.status === "LOCKED") {
+                PIN = "";
+                $("lockError").textContent = e.message;
+                $("pinOverlay").classList.remove("hidden");
+            }
+        }
+
+        async function loadData(silent) {
+            var btn = $("refreshBtn");
+            btn.disabled = true;
+            try {
+                var data = await api("GET_DATA");
+                ALL_SESSIONS = data.sessions || [];
+                renderMachines();
+                processAndRender();
+                if (!silent) showNotice("Veriler güncellendi.", false);
+            } catch (e) {
+                showNotice("Veri yüklenemedi: " + e.message, true);
+                lockAgainIfUnauthorized(e);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // --- MAKİNE VE DÖNEM SEÇİMİ ---
+        function renderMachines() {
+            var list = FIXED_MACHINES.slice();
+            ALL_SESSIONS.forEach(function (s) {
+                if (list.indexOf(s.machineId) === -1) list.push(s.machineId);
+            });
+            var html = '<button class="mac-btn ' + (CURRENT_MACHINE === "ALL" ? "active" : "") + '" data-machine="ALL">🏎️ TÜM MAKİNELER (KONSOLİDE)</button>';
+            list.forEach(function (m) {
+                html += '<button class="mac-btn ' + (CURRENT_MACHINE === m ? "active" : "") + '" data-machine="' + esc(m) + '">' + esc(m) + '</button>';
+            });
+            $("machineSelector").innerHTML = html;
+        }
+
+        function getIsoDate(dateVal) {
+            if (!dateVal) return "";
+            var s = String(dateVal).trim();
+            if (s.length >= 10 && s.charAt(4) === "-" && s.charAt(7) === "-") return s.slice(0, 10);
+            var d = new Date(dateVal);
+            if (!isNaN(d.getTime())) {
+                var y = d.getFullYear();
+                var m = ("0" + (d.getMonth() + 1)).slice(-2);
+                var day = ("0" + d.getDate()).slice(-2);
+                return y + "-" + m + "-" + day;
+            }
+            return s.slice(0, 10);
+        }
+
+        function getHour(dateVal) {
+            if (!dateVal) return 0;
+            var s = String(dateVal).trim();
+            if (s.length >= 13 && s.charAt(4) === "-" && s.charAt(13) === ":") {
+                return parseInt(s.slice(11, 13), 10) || 0;
+            }
+            var d = new Date(s);
+            if (!isNaN(d.getTime())) return d.getHours();
+            return 0;
+        }
+
+        function periodBounds() {
+            var now = new Date();
+            var today = getIsoDate(now);
+            var monday = new Date(now);
+            var day = monday.getDay();
+            monday.setDate(monday.getDate() - day + (day === 0 ? -6 : 1));
+            return { now: now, today: today, week: getIsoDate(monday), month: today.slice(0, 7) };
+        }
+
+        function machineSessions() {
+            if (CURRENT_MACHINE === "ALL") return ALL_SESSIONS;
+            return ALL_SESSIONS.filter(function (s) { return s.machineId === CURRENT_MACHINE; });
+        }
+
+        function setKpi(name, t) {
+            $("kpi" + name + "Total").innerText = money(t.tot);
+            $("kpi" + name + "Comp").innerText = money(t.comp);
+            $("kpi" + name + "Own").innerText = money(t.own);
+            $("kpi" + name + "Count").innerText = t.cnt + " Seans";
+        }
+
+        function processAndRender() {
+            var filtered = machineSessions();
+            var b = periodBounds();
+
+            function bucket() { return { tot: 0, comp: 0, own: 0, cnt: 0 }; }
+            function add(t, p, cs, os) { t.tot += p; t.comp += cs; t.own += os; t.cnt++; }
+            var today = bucket(), week = bucket(), month = bucket(), all = bucket();
+
+            var last7 = {};
+            for (var i = 6; i >= 0; i--) {
+                var dt = new Date(b.now);
+                dt.setDate(dt.getDate() - i);
+                last7[getIsoDate(dt)] = 0;
+            }
+            var hourly = new Array(24).fill(0);
+
+            filtered.forEach(function (s) {
+                var p = Number(s.price) || 0;
+                var cs = Number(s.companyShare) || 0;
+                var os = Number(s.ownerShare) || 0;
+                var sDate = getIsoDate(s.startTime);
+
+                add(all, p, cs, os);
+                if (sDate >= b.today) add(today, p, cs, os);
+                if (sDate >= b.week) add(week, p, cs, os);
+                if (sDate.indexOf(b.month) === 0) add(month, p, cs, os);
+
+                if (last7.hasOwnProperty(sDate)) last7[sDate] += p;
+
+                var hr = getHour(s.startTime);
+                if (hr >= 0 && hr < 24) hourly[hr]++;
+            });
+
+            setKpi("Today", today);
+            setKpi("Week", week);
+            setKpi("Month", month);
+            setKpi("All", all);
+
+            drawDaily(last7);
+            drawHourly(hourly);
+            renderTable();
+        }
+
+        function renderTable() {
+            var search = ($("searchInput").value || "").toLowerCase().trim();
+            var b = periodBounds();
+
+            var filtered = machineSessions().filter(function (s) {
+                if (search && s.sessionId.toLowerCase().indexOf(search) === -1 && s.machineId.toLowerCase().indexOf(search) === -1) return false;
+                var sDate = getIsoDate(s.startTime);
+                if (CURRENT_PERIOD === "today" && sDate !== b.today) return false;
+                if (CURRENT_PERIOD === "week" && sDate < b.week) return false;
+                if (CURRENT_PERIOD === "month" && sDate.indexOf(b.month) !== 0) return false;
+                return true;
+            });
+
+            var tbody = $("sessionBody");
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" class="cell-empty">Kayıt bulunamadı.</td></tr>';
+                return;
+            }
+
+            var html = "";
+            filtered.slice().reverse().forEach(function (s) {
+                var isTest = s.status && s.status.indexOf("TEST") !== -1;
+                var ids = 'data-sid="' + esc(s.sessionId) + '" data-mid="' + esc(s.machineId) + '"';
+                html += "<tr>" +
+                    '<td class="cell-machine">' + esc(s.machineId) + "</td>" +
+                    '<td class="cell-id">#' + esc(s.sessionId) + "</td>" +
+                    "<td>" + esc(s.startTime) + "</td>" +
+                    "<td>" + esc(s.endTime || "-") + "</td>" +
+                    "<td>" + (Number(s.durationMinutes) || 0).toFixed(1) + " Dk</td>" +
+                    '<td class="cell-total">' + money(s.price) + "</td>" +
+                    '<td class="cell-comp">' + money(s.companyShare) + "</td>" +
+                    '<td class="cell-own">' + money(s.ownerShare) + "</td>" +
+                    '<td><span class="badge-status ' + (isTest ? "badge-test" : "") + '">' + esc(s.status || "Tamamlandı") + "</span></td>" +
+                    "<td>" +
+                    (isTest ? "" : '<button class="action-btn btn-test" data-op="test" ' + ids + ">⚠️ Test Yap</button>") +
+                    '<button class="action-btn btn-delete" data-op="delete" ' + ids + ">🗑️ Sil</button>" +
+                    "</td></tr>";
+            });
+            tbody.innerHTML = html;
+        }
+
+        // --- YÖNETİCİ MÜDAHALE İŞLEMLERİ ---
+        async function runAdminAction(op, sid, mid) {
+            var isDelete = op === "delete";
+            var question = isDelete
+                ? mid + " makinesindeki " + sid + " numaralı seansı kalıcı olarak silmek istediğinize emin misiniz?"
+                : mid + " makinesindeki " + sid + " numaralı seansı TEST olarak işaretleyip tutarını 0 ₺ yapmak istiyor musunuz?";
+            if (!confirm(question)) return;
+
+            var buttons = document.querySelectorAll(".action-btn");
+            buttons.forEach(function (b) { b.disabled = true; });
+            try {
+                await api(isDelete ? "DELETE_SESSION" : "MARK_TEST", { sessionId: sid, machineId: mid });
+                await loadData(true);
+                showNotice(isDelete ? "Seans silindi: " + sid : "Seans TEST olarak işaretlendi ve cirodan düşüldü: " + sid, false);
+            } catch (e) {
+                document.querySelectorAll(".action-btn").forEach(function (b) { b.disabled = false; });
+                showNotice("İşlem başarısız: " + e.message, true);
+                lockAgainIfUnauthorized(e);
+            }
+        }
+
+        // --- CANVAS GRAFİKLERİ ---
+        function prepCanvas(id) {
+            var canvas = $(id);
+            var rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            var ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            return { canvas: canvas, ctx: ctx };
+        }
+
+        function drawDaily(dataObj) {
+            var c = prepCanvas("dailyChartCanvas"), canvas = c.canvas, ctx = c.ctx;
+            var keys = Object.keys(dataObj);
+            var vals = keys.map(function (k) { return dataObj[k]; });
+            var maxVal = Math.max.apply(null, vals.concat([300]));
+            var pad = { top: 25, bottom: 25, left: 15, right: 15 };
+            var w = canvas.width - pad.left - pad.right;
+            var h = canvas.height - pad.top - pad.bottom;
+            var colW = w / keys.length;
+            var barW = Math.min(38, colW * 0.55);
+
+            keys.forEach(function (k, i) {
+                var x = pad.left + i * colW + (colW - barW) / 2;
+                var barH = (dataObj[k] / maxVal) * h;
+                var y = pad.top + h - barH;
+
+                var grad = ctx.createLinearGradient(0, y, 0, y + barH);
+                grad.addColorStop(0, "#00e676"); grad.addColorStop(1, "rgba(0, 230, 118, 0.2)");
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(x, y, barW, barH, [4, 4, 0, 0]); else ctx.rect(x, y, barW, barH);
+                ctx.fill();
+
+                if (dataObj[k] > 0) {
+                    ctx.fillStyle = "#fff"; ctx.font = "bold 11px sans-serif"; ctx.textAlign = "center";
+                    ctx.fillText(dataObj[k] + "₺", x + barW / 2, y - 6);
+                }
+                ctx.fillStyle = "#888"; ctx.font = "11px sans-serif"; ctx.textAlign = "center";
+                ctx.fillText(k.slice(5), x + barW / 2, canvas.height - 8);
+            });
+        }
+
+        function drawHourly(arr) {
+            var c = prepCanvas("hourlyChartCanvas"), canvas = c.canvas, ctx = c.ctx;
+            var maxVal = Math.max.apply(null, arr.concat([2]));
+            var pad = { top: 25, bottom: 25, left: 15, right: 15 };
+            var w = canvas.width - pad.left - pad.right;
+            var h = canvas.height - pad.top - pad.bottom;
+            var colW = w / 24;
+            var barW = Math.max(3, colW * 0.7);
+
+            arr.forEach(function (cnt, i) {
+                var x = pad.left + i * colW + (colW - barW) / 2;
+                var barH = (cnt / maxVal) * h;
+                var y = pad.top + h - barH;
+
+                var grad = ctx.createLinearGradient(0, y, 0, y + barH);
+                grad.addColorStop(0, "#2979ff"); grad.addColorStop(1, "rgba(41, 121, 255, 0.2)");
+                ctx.fillStyle = cnt > 0 ? grad : "rgba(255,255,255,0.05)";
+                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(x, y, barW, Math.max(2, barH), [2, 2, 0, 0]); else ctx.rect(x, y, barW, Math.max(2, barH));
+                ctx.fill();
+
+                if (i % 4 === 0) {
+                    ctx.fillStyle = "#666"; ctx.font = "10px sans-serif"; ctx.textAlign = "center";
+                    ctx.fillText(i + ":00", x + barW / 2, canvas.height - 8);
+                }
+            });
+        }
+
+        // --- OLAYLAR ---
+        $("loginBtn").addEventListener("click", login);
+        $("adminPinInput").addEventListener("keydown", function (e) { if (e.key === "Enter") login(); });
+        $("changeApiBtn").addEventListener("click", changeApi);
+        $("refreshBtn").addEventListener("click", function () { loadData(false); });
+        $("searchInput").addEventListener("input", renderTable);
+
+        $("machineSelector").addEventListener("click", function (e) {
+            var btn = e.target.closest("[data-machine]");
+            if (!btn) return;
+            CURRENT_MACHINE = btn.getAttribute("data-machine");
+            renderMachines();
+            processAndRender();
+        });
+
+        $("periodTabs").addEventListener("click", function (e) {
+            var btn = e.target.closest("[data-period]");
+            if (!btn) return;
+            CURRENT_PERIOD = btn.getAttribute("data-period");
+            document.querySelectorAll(".p-btn").forEach(function (b) { b.classList.remove("active"); });
+            btn.classList.add("active");
+            renderTable();
+        });
+
+        $("sessionBody").addEventListener("click", function (e) {
+            var btn = e.target.closest("[data-op]");
+            if (!btn || btn.disabled) return;
+            runAdminAction(btn.getAttribute("data-op"), btn.getAttribute("data-sid"), btn.getAttribute("data-mid"));
+        });
+
+        var resizeTimer;
+        window.addEventListener("resize", function () {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function () { if (PIN) processAndRender(); }, 200);
+        });
+
+        // --- KURULUM ---
+        var installPrompt = null;
+        window.addEventListener("beforeinstallprompt", function (e) {
+            e.preventDefault();
+            installPrompt = e;
+            $("installBtn").classList.remove("hidden");
+        });
+        window.addEventListener("appinstalled", function () { $("installBtn").classList.add("hidden"); });
+        $("installBtn").addEventListener("click", function () {
+            if (!installPrompt) return;
+            installPrompt.prompt();
+            installPrompt = null;
+            $("installBtn").classList.add("hidden");
+        });
+
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("sw.js").catch(function (e) { console.warn("Service worker:", e); });
+        }
+
+        initApiUrl();
+    </script>
+</body>
+</html>
