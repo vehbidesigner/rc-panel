@@ -1,6 +1,6 @@
 // Yalnızca uygulama kabuğunu saklar. Ciro verisi başka adrese POST ile gider ve önbelleğe girmez.
-var CACHE = "rc-panel-v1";
-var SHELL = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
+var CACHE = "rc-panel-v2";
+var SHELL = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "logo.png"];
 
 self.addEventListener("install", function (event) {
   event.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }));

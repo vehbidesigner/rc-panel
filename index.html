@@ -19,6 +19,8 @@
         /* ÜST HEADER */
         .header { display: flex; justify-content: space-between; align-items: center; background: #15161c; padding: 18px 24px; border-radius: 12px; border: 1px solid #252733; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
         .brand-box { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .brand-logo { height: 46px; width: auto; display: block; }
+        .lock-logo { width: 230px; max-width: 100%; display: block; margin: 0 auto 22px; }
         .brand-title { font-size: 22px; font-weight: 900; letter-spacing: 1px; color: #fff; }
         .badge { font-size: 11px; font-weight: 800; padding: 5px 12px; border-radius: 6px; text-transform: uppercase; }
         .badge-green { background: #00c853; color: #000; font-weight: 900; }
@@ -116,6 +118,7 @@
     <!-- GİRİŞ EKRANI -->
     <div id="pinOverlay">
         <div class="lock-box">
+            <img src="logo.png" class="lock-logo" alt="XiSOUL Solution" />
             <div class="lock-title">🔐 YÖNETİCİ GİRİŞİ</div>
             <div class="lock-sub">Gamextra &amp; XiSOUL Bulut Paneli</div>
             <input type="url" id="apiInput" class="api-input hidden" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off" />
@@ -130,6 +133,7 @@
         <!-- HEADER -->
         <div class="header">
             <div class="brand-box">
+                <img src="logo.png" class="brand-logo" alt="XiSOUL Solution" />
                 <div class="brand-title">GAMEXTRA RC ARENA</div>
                 <span class="badge badge-green">CİRO PAYLAŞIMI: %50 / %50</span>
                 <span class="badge badge-blue">BULUT SENKRONİZASYONU</span>
